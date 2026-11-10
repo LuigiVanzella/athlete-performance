@@ -667,3 +667,151 @@ def analise_integrada():
         )
     }
 
+
+
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from supabase_client import conectar_supabase
+
+seguranca = HTTPBearer()
+
+@app.get("/api/supabase/status")
+def status_supabase(
+    credenciais: HTTPAuthorizationCredentials = Depends(seguranca)
+):
+    try:
+        supabase = conectar_supabase()
+
+        # Valida o token de autenticação recebido
+        token = credenciais.credentials
+        usuario = supabase.auth.get_user(token).user
+
+        if not usuario:
+            raise HTTPException(
+                status_code=401,
+                detail="Usuário não autenticado"
+            )
+
+        # Faz as consultas usando o token do usuário,
+        # para respeitar as políticas RLS.
+        supabase.postgrest.auth(token)
+
+        atividades = (
+            supabase.table("activities")
+            .select("id", count="exact")
+            .eq("athlete_id", usuario.id)
+            .limit(0)
+            .execute()
+        )
+
+        recuperacao = (
+            supabase.table("wellness")
+            .select("id", count="exact")
+            .eq("athlete_id", usuario.id)
+            .limit(0)
+            .execute()
+        )
+
+        return {
+            "status": "conectado",
+            "athlete_id": usuario.id,
+            "atividades": atividades.count,
+            "recuperacao": recuperacao.count
+        }
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Não foi possível validar a autenticação"
+        )
+
+
+@app.get("/api/supabase/atividades")
+def listar_atividades_supabase(
+    credenciais: HTTPAuthorizationCredentials = Depends(seguranca)
+):
+    token = credenciais.credentials
+
+    try:
+        supabase = conectar_supabase()
+
+        # Identifica o atleta autenticado
+        usuario = supabase.auth.get_user(token).user
+
+        if not usuario:
+            raise HTTPException(
+                status_code=401,
+                detail="Usuário não autenticado"
+            )
+
+        # Aplica o token às consultas do banco
+        supabase.postgrest.auth(token)
+
+        resposta = (
+            supabase.table("activities")
+            .select(
+                "intervals_id,data,nome,esporte,duracao,distancia"
+            )
+            .eq("athlete_id", usuario.id)
+            .order("data", desc=True)
+            .execute()
+        )
+
+        return {
+            "total": len(resposta.data),
+            "atividades": resposta.data
+        }
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao consultar atividades"
+        )
+
+
+@app.get("/api/supabase/recuperacao")
+def listar_recuperacao_supabase(
+    credenciais: HTTPAuthorizationCredentials = Depends(seguranca)
+):
+    token = credenciais.credentials
+
+    try:
+        supabase = conectar_supabase()
+
+        usuario = supabase.auth.get_user(token).user
+
+        if not usuario:
+            raise HTTPException(
+                status_code=401,
+                detail="Usuário não autenticado"
+            )
+
+        supabase.postgrest.auth(token)
+
+        resposta = (
+            supabase.table("wellness")
+            .select(
+                "data,hrv,resting_hr,sleep_seconds,"
+                "sleep_score,weight,ctl,atl"
+            )
+            .eq("athlete_id", usuario.id)
+            .order("data", desc=True)
+            .execute()
+        )
+
+        return {
+            "total": len(resposta.data),
+            "recuperacao": resposta.data
+        }
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao consultar recuperação"
+        )
