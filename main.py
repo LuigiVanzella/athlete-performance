@@ -4,13 +4,16 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from datetime import date, timedelta
-
+from pydantic import BaseModel
+from fastapi import HTTPException
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="Athlete Performance AI",
     description="Dashboard de desempenho e recuperação para triathlon",
     version="1.0.0"
 )
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "athlete_performance.db"
@@ -814,4 +817,48 @@ def listar_recuperacao_supabase(
         raise HTTPException(
             status_code=500,
             detail="Erro ao consultar recuperação"
+        )
+
+
+@app.get("/login")
+def pagina_login():
+    return FileResponse("static/login.html")
+
+
+
+class DadosLogin(BaseModel):
+    email: str
+    senha: str
+
+
+@app.post("/api/auth/login")
+def realizar_login(dados: DadosLogin):
+    try:
+        supabase = conectar_supabase()
+
+        resposta = supabase.auth.sign_in_with_password({
+            "email": dados.email,
+            "password": dados.senha
+        })
+
+        if not resposta.session or not resposta.user:
+            raise HTTPException(
+                status_code=401,
+                detail="E-mail ou senha inválidos"
+            )
+
+        return {
+            "sucesso": True,
+            "usuario": {
+                "id": resposta.user.id,
+                "email": resposta.user.email
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="E-mail ou senha inválidos"
         )

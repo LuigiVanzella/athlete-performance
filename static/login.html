@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login | Athlete Performance AI</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #080e1c;
+        color: #fff;
+        font-family: Arial, sans-serif;
+      }
+
+      .login {
+        width: 320px;
+        padding: 32px;
+        background: #121c30;
+        border: 1px solid #263650;
+        border-radius: 16px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+
+      input,
+      button {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      input {
+        background: #0b1424;
+        color: white;
+        border: 1px solid #334155;
+      }
+
+      button {
+        background: #2563eb;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      #mensagem {
+        min-height: 18px;
+        color: #fca5a5;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="login">
+      <h1>Athlete Performance AI</h1>
+      <p>Entre para acessar seus dados de treinamento.</p>
+
+      <form id="formLogin">
+        <input
+          id="email"
+          type="email"
+          placeholder="E-mail"
+          autocomplete="username"
+          required
+        />
+
+        <input
+          id="senha"
+          type="password"
+          placeholder="Senha"
+          autocomplete="current-password"
+          required
+        />
+
+        <button id="botao" type="submit">Entrar</button>
+      </form>
+
+      <p id="mensagem" role="status"></p>
+    </main>
+
+    <script src="/static/login.js"></script>
+  </body>
+</html>
